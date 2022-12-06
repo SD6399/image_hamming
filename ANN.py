@@ -42,10 +42,9 @@ def len_of_bin_vec(orig_folder,vert_size,hor_size,use_flip,use_rotate,extend_fla
     cnt=0
     pictures = os.listdir(orig_folder)
     for i in pictures:
-        pict = io.imread(orig_folder + i)
+        fname = orig_folder + "\\" + i
+        pict = io.imread(fname)
         cnt += count_of_quadr_in_pic(pict, vert_size, hor_size)
-
-    cnt -= 1
 
     if use_flip and use_rotate:
         bin_len = len(val_2_bin_list(cnt*8))
@@ -66,74 +65,49 @@ def deviding_by_img(orig_folder, size_hor, size_vert, use_flip, use_rotate,count
     weight = np.array([])
     for i in pictures:
         pict = io.imread(orig_folder + i)
-        for j in range(0, pict.shape[0]-size_hor+1, size_hor):
-            for k in range(0, pict.shape[1]-size_vert+1, size_vert):
+        for j in range(0, pict.shape[0]-size_hor+1, 1):
+            for k in range(0, pict.shape[1]-size_vert+1, 1):
                 if (pictures.index(i) == 0) and (j == k == 0):
 
-                    cut_img = pict[0:0 + size_hor, 0:0 + size_vert]
-                    weight = np.reshape(cut_img, (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
+                    orig_img = pict[0:0 + size_hor, 0:0 + size_vert]
+                    weight = np.reshape(orig_img, (orig_img.shape[0] * orig_img.shape[1] * orig_img.shape[2]))
                     weight = weight[np.newaxis]
-                    if use_flip:
-                        flip_img = cut_img[::-1, :, :]
-                        flip_img = np.reshape(flip_img, (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
-                        flip_img = flip_img[np.newaxis]
-
-                        weight = np.append(weight, flip_img, axis=0)
-                    if use_rotate:
-                        for rot in range(90, 360, 90):
-                            cut_img = np.rot90(cut_img)
-                            cut_img_ax = np.reshape(cut_img, (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
-                            cut_img_ax = cut_img_ax[np.newaxis]
-
-                            weight = np.append(weight, cut_img_ax, axis=0)
-
-                            print(weight.shape)
-                            if use_flip:
-                                flip_img = cut_img[::-1, :, :]
-                                flip_img = np.reshape(flip_img,
-                                                      (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
-                                flip_img = flip_img[np.newaxis]
-
-                                weight = np.append(weight, flip_img, axis=0)
-
-                                print(weight.shape)
-
                 else:
-
                     orig_img = np.zeros((size_hor, size_vert, 3))
                     tmp = pict[j:j + size_hor, k:k + size_vert]
                     orig_img[0:tmp.shape[0], 0: tmp.shape[1]] = tmp
                     cut_img_ax = np.reshape(orig_img, (orig_img.shape[0] * orig_img.shape[1] * orig_img.shape[2]))
                     cut_img_ax = cut_img_ax[np.newaxis]
+                    if weight.shape[0] < count_neuron:
+                        weight = np.append(weight, cut_img_ax, axis=0)
+                        print(weight.shape)
 
-                    weight = np.append(weight, cut_img_ax, axis=0)
-                    cut_img= orig_img
-                    if use_rotate:
-                        for rot in range(90, 360, 90):
-                            cut_img = np.rot90(cut_img)
-                            cut_img_ax = np.reshape(cut_img, (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
-                            cut_img_ax = cut_img_ax[np.newaxis]
-
+                if use_rotate:
+                    for rot in range(1, 4):
+                        cut_img = np.rot90(orig_img,rot)
+                        cut_img_ax = np.reshape(cut_img, (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
+                        cut_img_ax = cut_img_ax[np.newaxis]
+                        if weight.shape[0] < count_neuron:
                             weight = np.append(weight, cut_img_ax, axis=0)
 
-                            print(weight.shape)
+                        print(weight.shape)
 
-                            if use_flip:
-                                flip_img = cut_img[::-1, :, :]
-                                flip_img = np.reshape(flip_img,
-                                                      (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
-                                flip_img = flip_img[np.newaxis]
-
+                        if use_flip:
+                            flip_img = cut_img[::-1, :, :]
+                            flip_img = np.reshape(flip_img,
+                                                  (cut_img.shape[0] * cut_img.shape[1] * cut_img.shape[2]))
+                            flip_img = flip_img[np.newaxis]
+                            if weight.shape[0] < count_neuron:
                                 weight = np.append(weight, flip_img, axis=0)
-                    if use_flip:
-                        flip_img = orig_img[::-1, :, :]
-                        flip_img = np.reshape(flip_img,
-                                              (orig_img.shape[0] * orig_img.shape[1] * orig_img.shape[2]))
-                        flip_img = flip_img[np.newaxis]
-
+                if use_flip and not use_rotate:
+                    flip_img = orig_img[::-1, :, :]
+                    flip_img = np.reshape(flip_img,
+                                          (orig_img.shape[0] * orig_img.shape[1] * orig_img.shape[2]))
+                    flip_img = flip_img[np.newaxis]
+                    if weight.shape[0]  < count_neuron:
                         weight = np.append(weight, flip_img, axis=0)
 
-                        print(weight.shape)
+                    print(weight.shape)
 
     for i in range(weight.shape[0], count_neuron):
         cut_img = np.zeros((weight.shape[1]))
@@ -145,9 +119,10 @@ def deviding_by_img(orig_folder, size_hor, size_vert, use_flip, use_rotate,count
 
 
 def count_of_quadr_in_pic(image, size_hor, size_vert):
-    size_width = np.floor(image.shape[0] / size_hor)
-    size_high = np.floor(image.shape[1] / size_vert)
+    size_width = image.shape[0] - size_hor + 1
+    size_high = image.shape[1] - size_vert + 1
     count = int(size_width * size_high)
+    print(count)
     return count
 
 
