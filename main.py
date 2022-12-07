@@ -35,7 +35,8 @@ def ReverseModel( modelName, imagesPath ):
 
 if __name__ == "__main__":
     modelName = path + "\gfgModel.h5"
-
+    frVerSize = 591
+    frHorSize = 781
 
     # ------ создание
     print("\n *************     CreateModel       ***************  ")
